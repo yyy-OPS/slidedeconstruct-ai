@@ -6,12 +6,10 @@ let currentSettings: AISettings = { ...DEFAULT_AI_SETTINGS };
 
 // Allow initializing with env var if available and no user setting
 // Note: In Vite, environment variables need to be prefixed with VITE_ to be accessible in browser
-if (import.meta.env.VITE_API_KEY && !currentSettings.gemini.apiKey) {
-    currentSettings.gemini.apiKey = import.meta.env.VITE_API_KEY;
-}
+
 
 export const updateSettings = (settings: AISettings) => {
-  currentSettings = settings;
+    currentSettings = settings;
 };
 
 export const getSettings = () => currentSettings;
@@ -19,24 +17,24 @@ export const getSettings = () => currentSettings;
 // --- Helpers ---
 
 const cleanJsonString = (str: string): string => {
-  if (!str) return "{}";
-  let cleaned = str.trim();
-  
-  // Remove markdown wrapping if present
-  if (cleaned.startsWith('```json')) {
-    cleaned = cleaned.replace(/^```json\s*/, '').replace(/\s*```$/, '');
-  } else if (cleaned.startsWith('```')) {
-    cleaned = cleaned.replace(/^```\s*/, '').replace(/\s*```$/, '');
-  }
+    if (!str) return "{}";
+    let cleaned = str.trim();
 
-  // Attempt to extract JSON object if there's extra text
-  const firstOpen = cleaned.indexOf('{');
-  const lastClose = cleaned.lastIndexOf('}');
-  if (firstOpen !== -1 && lastClose !== -1 && lastClose > firstOpen) {
-      cleaned = cleaned.substring(firstOpen, lastClose + 1);
-  }
+    // Remove markdown wrapping if present
+    if (cleaned.startsWith('```json')) {
+        cleaned = cleaned.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+    } else if (cleaned.startsWith('```')) {
+        cleaned = cleaned.replace(/^```\s*/, '').replace(/\s*```$/, '');
+    }
 
-  return cleaned;
+    // Attempt to extract JSON object if there's extra text
+    const firstOpen = cleaned.indexOf('{');
+    const lastClose = cleaned.lastIndexOf('}');
+    if (firstOpen !== -1 && lastClose !== -1 && lastClose > firstOpen) {
+        cleaned = cleaned.substring(firstOpen, lastClose + 1);
+    }
+
+    return cleaned;
 };
 
 /**
@@ -48,16 +46,16 @@ const tryParseJSON = (jsonStr: string): any => {
     } catch (e: any) {
         console.warn("JSON Parse failed, attempting repair. Raw:", jsonStr);
         let repaired = jsonStr.trim();
-        
+
         if (repaired.lastIndexOf(']') === -1 || repaired.lastIndexOf(']') < repaired.lastIndexOf('[')) {
-             if (repaired.endsWith(',')) {
-                 repaired = repaired.slice(0, -1);
-             }
-             if (repaired.endsWith('}')) {
-                 repaired += ']}';
-             } else {
-                 repaired += ']}'; 
-             }
+            if (repaired.endsWith(',')) {
+                repaired = repaired.slice(0, -1);
+            }
+            if (repaired.endsWith('}')) {
+                repaired += ']}';
+            } else {
+                repaired += ']}';
+            }
         } else if (repaired.lastIndexOf('}') === -1) {
             repaired += '}';
         }
@@ -66,7 +64,7 @@ const tryParseJSON = (jsonStr: string): any => {
             return JSON.parse(repaired);
         } catch (e2) {
             console.error("JSON Repair failed:", e2);
-            throw new Error(`JSON Parse Error: ${e.message}. \nRaw: ${jsonStr.substring(0, 100)}...`); 
+            throw new Error(`JSON Parse Error: ${e.message}. \nRaw: ${jsonStr.substring(0, 100)}...`);
         }
     }
 }
@@ -100,7 +98,7 @@ const findElementsArray = (obj: any): any[] => {
 const parseCoord = (val: any, baseSize: number = 100): number => {
     if (typeof val === 'number') {
         // Keep decimals for precision (don't Math.round too early)
-        return val; 
+        return val;
     }
     if (typeof val === 'string') {
         return parseFloat(val.replace('%', ''));
@@ -112,7 +110,7 @@ const normalizeElement = (el: any, index: number) => {
     let box = el.box;
 
     if (!box) {
-         box = { top: 10, left: 10, width: 20, height: 20 };
+        box = { top: 10, left: 10, width: 20, height: 20 };
     } else if (Array.isArray(box)) {
         if (box.length >= 4) {
             box = { top: box[0], left: box[1], width: box[2], height: box[3] };
@@ -127,7 +125,7 @@ const normalizeElement = (el: any, index: number) => {
         width: parseCoord(box.width),
         height: parseCoord(box.height)
     };
-    
+
     // Heuristic: If all values are <= 1, assume they are normalized (0-1) and convert to percentages (0-100).
     // If any value > 1, assume they are already percentages or pixels relative to 100x100 space.
     if (nBox.top <= 1 && nBox.left <= 1 && nBox.width <= 1 && nBox.height <= 1 && (nBox.width > 0 || nBox.height > 0)) {
@@ -148,14 +146,14 @@ const normalizeElement = (el: any, index: number) => {
     }
 
     return {
-      ...el,
-      id: el.id || `el-${Date.now()}-${index}`,
-      type: normalizedType, 
-      box: nBox,
-      originalBox: { ...nBox },
-      style: normalizedType === ElementType.TEXT ? (el.style || { fontSize: 'medium', fontWeight: 'normal', color: '#000000', alignment: 'left' }) : undefined,
-      content: el.content || (normalizedType === ElementType.TEXT ? "Detected Text" : ""),
-      description: el.description || (normalizedType === ElementType.VISUAL ? "Visual Element" : "")
+        ...el,
+        id: el.id || `el-${Date.now()}-${index}`,
+        type: normalizedType,
+        box: nBox,
+        originalBox: { ...nBox },
+        style: normalizedType === ElementType.TEXT ? (el.style || { fontSize: 'medium', fontWeight: 'normal', color: '#000000', alignment: 'left' }) : undefined,
+        content: el.content || (normalizedType === ElementType.TEXT ? "Detected Text" : ""),
+        description: el.description || (normalizedType === ElementType.VISUAL ? "Visual Element" : "")
     };
 };
 
@@ -167,8 +165,8 @@ const callGeminiWithRetry = async <T>(
     try {
         return await fn();
     } catch (error: any) {
-        const isRateLimit = 
-            error?.status === 429 || 
+        const isRateLimit =
+            error?.status === 429 ||
             error?.response?.status === 429 ||
             (typeof error?.message === 'string' && (
                 error.message.includes('429') ||
@@ -194,22 +192,22 @@ const getOpenAIHeaders = (apiKey: string) => ({
 const getOpenAIBaseUrl = (baseUrl: string) => baseUrl.replace(/\/$/, '');
 
 const callOpenAIChat = async (
-    systemPrompt: string, 
-    userPrompt: string, 
-    imageBase64?: string, 
+    systemPrompt: string,
+    userPrompt: string,
+    imageBase64?: string,
     jsonMode: boolean = false
 ): Promise<string> => {
     const config = currentSettings.openai;
     const messages: any[] = [
         { role: "system", content: systemPrompt },
-        { 
-            role: "user", 
-            content: imageBase64 
+        {
+            role: "user",
+            content: imageBase64
                 ? [
                     { type: "text", text: userPrompt },
                     { type: "image_url", image_url: { url: `data:image/png;base64,${imageBase64}` } }
-                  ]
-                : userPrompt 
+                ]
+                : userPrompt
         }
     ];
 
@@ -245,15 +243,15 @@ const callOpenAIImageGen = async (prompt: string, inputImageBase64?: string): Pr
     if (isGeminiModel) {
         const baseUrl = getOpenAIBaseUrl(config.baseUrl);
         const headers = getOpenAIHeaders(config.apiKey);
-        
+
         const messages = [
             {
                 role: 'user',
-                content: inputImageBase64 
+                content: inputImageBase64
                     ? [
                         { type: "text", text: prompt },
                         { type: "image_url", image_url: { url: `data:image/png;base64,${inputImageBase64}` } }
-                      ]
+                    ]
                     : prompt
             }
         ];
@@ -262,7 +260,7 @@ const callOpenAIImageGen = async (prompt: string, inputImageBase64?: string): Pr
             method: 'POST',
             headers: headers,
             body: JSON.stringify({
-                model: config.drawingModel, 
+                model: config.drawingModel,
                 messages: messages
             })
         });
@@ -274,7 +272,7 @@ const callOpenAIImageGen = async (prompt: string, inputImageBase64?: string): Pr
 
         const data = await res.json();
         const content = data.choices?.[0]?.message?.content || "";
-        
+
         const match = content.match(/\!\[.*?\]\((.*?)\)/);
         let imageUrl = "";
 
@@ -285,19 +283,19 @@ const callOpenAIImageGen = async (prompt: string, inputImageBase64?: string): Pr
         }
 
         if (imageUrl) {
-             if (imageUrl.startsWith('data:image')) {
+            if (imageUrl.startsWith('data:image')) {
                 return imageUrl.split(',')[1];
-             }
-             try {
+            }
+            try {
                 const imgRes = await fetch(imageUrl);
                 const blob = await imgRes.blob();
                 const b64 = await blobToBase64(blob);
                 return b64.split(',')[1];
-             } catch (e) {
+            } catch (e) {
                 console.warn("Failed to fetch image from proxy URL:", e);
-             }
+            }
         }
-        return ""; 
+        return "";
     }
 
     const isDalle3 = config.drawingModel.includes('dall-e-3');
@@ -307,10 +305,10 @@ const callOpenAIImageGen = async (prompt: string, inputImageBase64?: string): Pr
         method: 'POST',
         headers: getOpenAIHeaders(config.apiKey),
         body: JSON.stringify({
-            model: config.drawingModel, 
+            model: config.drawingModel,
             prompt: prompt,
             n: 1,
-            size: size, 
+            size: size,
             response_format: "b64_json"
         })
     });
@@ -327,7 +325,12 @@ const callOpenAIImageGen = async (prompt: string, inputImageBase64?: string): Pr
 const getGeminiClient = (overrideConfig?: ProviderConfig) => {
     const config = overrideConfig || currentSettings.gemini;
     if (!config.apiKey) throw new Error("Gemini API Key is missing.");
-    const options: any = { apiKey: config.apiKey };
+    const options: any = {
+        apiKey: config.apiKey,
+        httpOptions: {
+            baseUrl: config.baseUrl
+        }
+    };
     return new GoogleGenAI(options);
 };
 
@@ -379,8 +382,8 @@ export const testModel = async (
                         headers: headers,
                         body: JSON.stringify({ model: config.drawingModel, messages: [{ role: 'user', content: 'Test Image Gen' }] })
                     });
-                     if (!res.ok) throw new Error(`${res.status}`);
-                     return { success: true, message: "Connected (Proxy)" };
+                    if (!res.ok) throw new Error(`${res.status}`);
+                    return { success: true, message: "Connected (Proxy)" };
                 } else {
                     const res = await fetch(`${baseUrl}/images/generations`, {
                         method: 'POST',
@@ -403,189 +406,189 @@ export const testModel = async (
  * Uses detected text and their bounding boxes to inform the model what to remove.
  */
 export const removeTextFromImage = async (base64Image: string, detectedElements: SlideTextElement[]): Promise<string | null> => {
-  const cleanBase64 = base64Image.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, "");
-  
-  // STRICTER PROMPT FOR SURGICAL REMOVAL
-  let prompt = "Strictly preserve the original aspect ratio (16:9). You are an expert image editor performing surgical text removal.";
-  
-  if (detectedElements && detectedElements.length > 0) {
-      prompt += " \n\nCRITICAL INSTRUCTIONS:\n1. I have identified specific text regions below.\n2. You MUST erase content ONLY within these exact bounding boxes (coordinates 0-100%).\n3. DO NOT touch, blur, remove, or alter any other part of the image. Visual elements, icons, lines, and shapes outside these boxes must remain PIXEL-PERFECT identical to the original.\n";
-      
-      detectedElements.forEach((el, index) => {
-          const { top, left, width, height } = el.box;
-          if (index < 30) {
-              prompt += ` - Target Zone ${index + 1}: [Top: ${top.toFixed(2)}%, Left: ${left.toFixed(2)}%, Width: ${width.toFixed(2)}%, Height: ${height.toFixed(2)}%] (Content to erase: "${el.content.substring(0, 20)}...")\n`;
-          }
-      });
-      prompt += "\nFill these erased text zones with the matching background color or texture of the immediate surrounding area. Do not hallucinate new objects.";
-  }
-  
-  prompt += " \n\nOutput ONLY the processed image.";
+    const cleanBase64 = base64Image.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, "");
 
-  try {
-    if (currentSettings.currentProvider === 'gemini') {
-        const ai = getGeminiClient();
-        const response = await callGeminiWithRetry<GenerateContentResponse>(() => ai.models.generateContent({
-          model: currentSettings.gemini.drawingModel,
-          contents: {
-            parts: [
-              { inlineData: { mimeType: 'image/png', data: cleanBase64 } },
-              { text: prompt }
-            ]
-          },
-          // Add safety settings to prevent false positives blocking image generation
-          safetySettings: [
-              { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-              { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
-              { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
-              { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-          ]
-        }));
-        if (response.candidates?.[0]?.content?.parts) {
-            for (const part of response.candidates[0].content.parts) {
-                if (part.inlineData && part.inlineData.data) {
-                    return part.inlineData.data;
+    // STRICTER PROMPT FOR SURGICAL REMOVAL
+    let prompt = "Strictly preserve the original aspect ratio (16:9). You are an expert image editor performing surgical text removal.";
+
+    if (detectedElements && detectedElements.length > 0) {
+        prompt += " \n\nCRITICAL INSTRUCTIONS:\n1. I have identified specific text regions below.\n2. You MUST erase content ONLY within these exact bounding boxes (coordinates 0-100%).\n3. DO NOT touch, blur, remove, or alter any other part of the image. Visual elements, icons, lines, and shapes outside these boxes must remain PIXEL-PERFECT identical to the original.\n";
+
+        detectedElements.forEach((el, index) => {
+            const { top, left, width, height } = el.box;
+            if (index < 30) {
+                prompt += ` - Target Zone ${index + 1}: [Top: ${top.toFixed(2)}%, Left: ${left.toFixed(2)}%, Width: ${width.toFixed(2)}%, Height: ${height.toFixed(2)}%] (Content to erase: "${el.content.substring(0, 20)}...")\n`;
+            }
+        });
+        prompt += "\nFill these erased text zones with the matching background color or texture of the immediate surrounding area. Do not hallucinate new objects.";
+    }
+
+    prompt += " \n\nOutput ONLY the processed image.";
+
+    try {
+        if (currentSettings.currentProvider === 'gemini') {
+            const ai = getGeminiClient();
+            const response = await callGeminiWithRetry<GenerateContentResponse>(() => ai.models.generateContent({
+                model: currentSettings.gemini.drawingModel,
+                contents: {
+                    parts: [
+                        { inlineData: { mimeType: 'image/png', data: cleanBase64 } },
+                        { text: prompt }
+                    ]
+                },
+                // Add safety settings to prevent false positives blocking image generation
+                safetySettings: [
+                    { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+                    { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
+                    { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
+                    { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+                ]
+            }));
+            if (response.candidates?.[0]?.content?.parts) {
+                for (const part of response.candidates[0].content.parts) {
+                    if (part.inlineData && part.inlineData.data) {
+                        return part.inlineData.data;
+                    }
+                }
+            }
+        } else {
+            const config = currentSettings.openai;
+            const isGeminiDrawing = config.drawingModel.toLowerCase().includes('gemini');
+
+            if (isGeminiDrawing) {
+                return await callOpenAIImageGen(prompt, cleanBase64);
+            } else {
+                const description = await callOpenAIChat(
+                    "Graphic Designer",
+                    "Detailed analysis of this PPT slide's background style, color palette, and layout structure. IGNORE the text content. Describe ONLY the visual design elements (background shapes, gradients, footer style, icon placement) so a designer can recreate the empty template.",
+                    cleanBase64
+                );
+
+                if (description) {
+                    return await callOpenAIImageGen(`Professional PowerPoint Background, 16:9 Wide Aspect Ratio. Exact replica of this style: ${description}. NO TEXT. Clean, empty template for presentation.`);
                 }
             }
         }
-    } else {
-        const config = currentSettings.openai;
-        const isGeminiDrawing = config.drawingModel.toLowerCase().includes('gemini');
-
-        if (isGeminiDrawing) {
-            return await callOpenAIImageGen(prompt, cleanBase64);
-        } else {
-            const description = await callOpenAIChat(
-                "Graphic Designer",
-                "Detailed analysis of this PPT slide's background style, color palette, and layout structure. IGNORE the text content. Describe ONLY the visual design elements (background shapes, gradients, footer style, icon placement) so a designer can recreate the empty template.",
-                cleanBase64
-            );
-            
-            if (description) {
-                return await callOpenAIImageGen(`Professional PowerPoint Background, 16:9 Wide Aspect Ratio. Exact replica of this style: ${description}. NO TEXT. Clean, empty template for presentation.`);
-            }
-        }
+        return null;
+    } catch (error) {
+        console.warn("Background gen failed silently:", error);
+        return null;
     }
-    return null;
-  } catch (error) {
-    console.warn("Background gen failed silently:", error);
-    return null;
-  }
 };
 
 /**
  * 2.1 Explicit Erasure of User Defined Regions (Partial Inpainting)
  */
 export const eraseAreasFromImage = async (base64Image: string, boxes: BoundingBox[]): Promise<string | null> => {
-  const cleanBase64 = base64Image.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, "");
+    const cleanBase64 = base64Image.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, "");
 
-  let prompt = "Strictly preserve the original aspect ratio (16:9). You are an expert image editor performing precise object removal.";
-  
-  if (boxes && boxes.length > 0) {
-      prompt += " \n\nCRITICAL INSTRUCTIONS:\n1. I have identified specific regions below that contain unwanted elements.\n2. You MUST erase EVERYTHING inside these exact bounding boxes (coordinates 0-100%).\n3. DO NOT touch, blur, remove, or alter any other part of the image outside these boxes. The rest of the image must remain PIXEL-PERFECT.\n";
-      
-      boxes.forEach((box, index) => {
-          const { top, left, width, height } = box;
-          prompt += ` - Removal Zone ${index + 1}: [Top: ${top.toFixed(2)}%, Left: ${left.toFixed(2)}%, Width: ${width.toFixed(2)}%, Height: ${height.toFixed(2)}%]\n`;
-      });
-      prompt += "\nFill these erased zones by extending the surrounding background texture, color, or pattern naturally. Make it look like nothing was ever there.";
-  } else {
-      return null;
-  }
-  
-  prompt += " \n\nOutput ONLY the processed image.";
+    let prompt = "Strictly preserve the original aspect ratio (16:9). You are an expert image editor performing precise object removal.";
 
-  try {
-    if (currentSettings.currentProvider === 'gemini') {
-        const ai = getGeminiClient();
-        const response = await callGeminiWithRetry<GenerateContentResponse>(() => ai.models.generateContent({
-          model: currentSettings.gemini.drawingModel,
-          contents: {
-            parts: [
-              { inlineData: { mimeType: 'image/png', data: cleanBase64 } },
-              { text: prompt }
-            ]
-          },
-          safetySettings: [
-              { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-              { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
-              { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
-              { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-          ]
-        }));
-        if (response.candidates?.[0]?.content?.parts) {
-            for (const part of response.candidates[0].content.parts) {
-                if (part.inlineData && part.inlineData.data) {
-                    return part.inlineData.data;
+    if (boxes && boxes.length > 0) {
+        prompt += " \n\nCRITICAL INSTRUCTIONS:\n1. I have identified specific regions below that contain unwanted elements.\n2. You MUST erase EVERYTHING inside these exact bounding boxes (coordinates 0-100%).\n3. DO NOT touch, blur, remove, or alter any other part of the image outside these boxes. The rest of the image must remain PIXEL-PERFECT.\n";
+
+        boxes.forEach((box, index) => {
+            const { top, left, width, height } = box;
+            prompt += ` - Removal Zone ${index + 1}: [Top: ${top.toFixed(2)}%, Left: ${left.toFixed(2)}%, Width: ${width.toFixed(2)}%, Height: ${height.toFixed(2)}%]\n`;
+        });
+        prompt += "\nFill these erased zones by extending the surrounding background texture, color, or pattern naturally. Make it look like nothing was ever there.";
+    } else {
+        return null;
+    }
+
+    prompt += " \n\nOutput ONLY the processed image.";
+
+    try {
+        if (currentSettings.currentProvider === 'gemini') {
+            const ai = getGeminiClient();
+            const response = await callGeminiWithRetry<GenerateContentResponse>(() => ai.models.generateContent({
+                model: currentSettings.gemini.drawingModel,
+                contents: {
+                    parts: [
+                        { inlineData: { mimeType: 'image/png', data: cleanBase64 } },
+                        { text: prompt }
+                    ]
+                },
+                safetySettings: [
+                    { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+                    { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
+                    { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
+                    { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+                ]
+            }));
+            if (response.candidates?.[0]?.content?.parts) {
+                for (const part of response.candidates[0].content.parts) {
+                    if (part.inlineData && part.inlineData.data) {
+                        return part.inlineData.data;
+                    }
                 }
             }
-        }
-    } else {
-        const config = currentSettings.openai;
-        const isGeminiDrawing = config.drawingModel.toLowerCase().includes('gemini');
-        if (isGeminiDrawing) {
-            return await callOpenAIImageGen(prompt, cleanBase64);
         } else {
-             const description = await callOpenAIChat("Assistant", "Describe this image background structure ignoring specific objects.", cleanBase64);
-             return await callOpenAIImageGen(`Image: ${description}. Remove objects in specified areas and fill with background.`, cleanBase64);
+            const config = currentSettings.openai;
+            const isGeminiDrawing = config.drawingModel.toLowerCase().includes('gemini');
+            if (isGeminiDrawing) {
+                return await callOpenAIImageGen(prompt, cleanBase64);
+            } else {
+                const description = await callOpenAIChat("Assistant", "Describe this image background structure ignoring specific objects.", cleanBase64);
+                return await callOpenAIImageGen(`Image: ${description}. Remove objects in specified areas and fill with background.`, cleanBase64);
+            }
         }
+        return null;
+    } catch (error) {
+        console.error("Erasure failed:", error);
+        throw error;
     }
-    return null;
-  } catch (error) {
-    console.error("Erasure failed:", error);
-    throw error;
-  }
 };
 
 export const regenerateVisualElement = async (croppedBase64: string, instruction: string): Promise<string | null> => {
-   const cleanBase64 = croppedBase64.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, "");
-   try {
-     if (currentSettings.currentProvider === 'gemini') {
-         const ai = getGeminiClient();
-         const response = await callGeminiWithRetry<GenerateContentResponse>(() => ai.models.generateContent({
-           model: currentSettings.gemini.drawingModel,
-           contents: {
-             parts: [
-               { inlineData: { mimeType: 'image/png', data: cleanBase64 } },
-               { text: `Edit this image: ${instruction}. Maintain exact aspect ratio and style. Output image only.` }
-             ]
-           },
-           safetySettings: [
-              { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-              { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
-              { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
-              { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-          ]
-         }));
-         if (response.candidates?.[0]?.content?.parts) {
-           for (const part of response.candidates[0].content.parts) {
-               if (part.inlineData && part.inlineData.data) {
-                   return part.inlineData.data;
-               }
-           }
-         }
-     } else {
-         const config = currentSettings.openai;
-         const isGeminiDrawing = config.drawingModel.toLowerCase().includes('gemini');
-         if (isGeminiDrawing) {
-             return await callOpenAIImageGen(`Edit this image: ${instruction}. Maintain exact aspect ratio and style. Output image only.`, cleanBase64);
-         } else {
-             const description = await callOpenAIChat("Assistant", "Describe this image element.", cleanBase64);
-             return await callOpenAIImageGen(`Image: ${description}. Modification: ${instruction}. White background.`);
-         }
-     }
-     return null;
-   } catch (error) {
-     console.error("Regenerate Visual Failed:", error);
-     throw error;
-   }
+    const cleanBase64 = croppedBase64.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, "");
+    try {
+        if (currentSettings.currentProvider === 'gemini') {
+            const ai = getGeminiClient();
+            const response = await callGeminiWithRetry<GenerateContentResponse>(() => ai.models.generateContent({
+                model: currentSettings.gemini.drawingModel,
+                contents: {
+                    parts: [
+                        { inlineData: { mimeType: 'image/png', data: cleanBase64 } },
+                        { text: `Edit this image: ${instruction}. Maintain exact aspect ratio and style. Output image only.` }
+                    ]
+                },
+                safetySettings: [
+                    { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+                    { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
+                    { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
+                    { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+                ]
+            }));
+            if (response.candidates?.[0]?.content?.parts) {
+                for (const part of response.candidates[0].content.parts) {
+                    if (part.inlineData && part.inlineData.data) {
+                        return part.inlineData.data;
+                    }
+                }
+            }
+        } else {
+            const config = currentSettings.openai;
+            const isGeminiDrawing = config.drawingModel.toLowerCase().includes('gemini');
+            if (isGeminiDrawing) {
+                return await callOpenAIImageGen(`Edit this image: ${instruction}. Maintain exact aspect ratio and style. Output image only.`, cleanBase64);
+            } else {
+                const description = await callOpenAIChat("Assistant", "Describe this image element.", cleanBase64);
+                return await callOpenAIImageGen(`Image: ${description}. Modification: ${instruction}. White background.`);
+            }
+        }
+        return null;
+    } catch (error) {
+        console.error("Regenerate Visual Failed:", error);
+        throw error;
+    }
 }
 
 export const refineElement = async (croppedBase64: string, instruction?: string): Promise<any[]> => {
-  const cleanBase64 = croppedBase64.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, "");
-  
-  // HARDENED PROMPT FOR PRECISE SUB-ELEMENT DETECTION
-  const prompt = `
+    const cleanBase64 = croppedBase64.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, "");
+
+    // HARDENED PROMPT FOR PRECISE SUB-ELEMENT DETECTION
+    const prompt = `
     STRICT GEOMETRY MODE.
     This input image is a specific cropped region of a slide.
     ${instruction ? `Instruction: ${instruction}` : ''}
@@ -602,71 +605,71 @@ export const refineElement = async (croppedBase64: string, instruction?: string)
     Return JSON: { "elements": [{ "type", "content"/"description", "box": { "top": number, "left": number, "width": number, "height": number } }] }
   `;
 
-  try {
-    let jsonText = "";
-    if (currentSettings.currentProvider === 'gemini') {
-        const ai = getGeminiClient();
-        const response = await callGeminiWithRetry<GenerateContentResponse>(() => ai.models.generateContent({
-          model: currentSettings.gemini.recognitionModel,
-          contents: { parts: [{ inlineData: { mimeType: 'image/png', data: cleanBase64 } }, { text: prompt }] },
-          config: { responseMimeType: "application/json" }
-        }));
-        jsonText = response.text || "";
-    } else {
-        jsonText = await callOpenAIChat("JSON Generator", prompt, cleanBase64, true);
+    try {
+        let jsonText = "";
+        if (currentSettings.currentProvider === 'gemini') {
+            const ai = getGeminiClient();
+            const response = await callGeminiWithRetry<GenerateContentResponse>(() => ai.models.generateContent({
+                model: currentSettings.gemini.recognitionModel,
+                contents: { parts: [{ inlineData: { mimeType: 'image/png', data: cleanBase64 } }, { text: prompt }] },
+                config: { responseMimeType: "application/json" }
+            }));
+            jsonText = response.text || "";
+        } else {
+            jsonText = await callOpenAIChat("JSON Generator", prompt, cleanBase64, true);
+        }
+        const data = tryParseJSON(cleanJsonString(jsonText));
+        return (findElementsArray(data) || []).map(normalizeElement);
+    } catch (error) {
+        console.error("Refine Element Failed:", error);
+        throw error;
     }
-    const data = tryParseJSON(cleanJsonString(jsonText));
-    return (findElementsArray(data) || []).map(normalizeElement);
-  } catch (error) {
-    console.error("Refine Element Failed:", error);
-    throw error;
-  }
 };
 
 const processImageSchema: Schema = {
-  type: Type.OBJECT,
-  properties: {
-    backgroundColor: { type: Type.STRING },
-    elements: {
-      type: Type.ARRAY,
-      items: {
-        type: Type.OBJECT,
-        properties: {
-          type: { type: Type.STRING, enum: [ElementType.TEXT, ElementType.VISUAL] },
-          content: { type: Type.STRING },
-          description: { type: Type.STRING },
-          box: {
-            type: Type.OBJECT,
-            properties: {
-              top: { type: Type.NUMBER },
-              left: { type: Type.NUMBER },
-              width: { type: Type.NUMBER },
-              height: { type: Type.NUMBER },
+    type: Type.OBJECT,
+    properties: {
+        backgroundColor: { type: Type.STRING },
+        elements: {
+            type: Type.ARRAY,
+            items: {
+                type: Type.OBJECT,
+                properties: {
+                    type: { type: Type.STRING, enum: [ElementType.TEXT, ElementType.VISUAL] },
+                    content: { type: Type.STRING },
+                    description: { type: Type.STRING },
+                    box: {
+                        type: Type.OBJECT,
+                        properties: {
+                            top: { type: Type.NUMBER },
+                            left: { type: Type.NUMBER },
+                            width: { type: Type.NUMBER },
+                            height: { type: Type.NUMBER },
+                        },
+                        required: ["top", "left", "width", "height"],
+                    },
+                    style: {
+                        type: Type.OBJECT,
+                        properties: {
+                            fontSize: { type: Type.STRING, enum: ["small", "medium", "large", "title"] },
+                            fontWeight: { type: Type.STRING, enum: ["normal", "bold"] },
+                            color: { type: Type.STRING },
+                            alignment: { type: Type.STRING, enum: ["left", "center", "right"] }
+                        }
+                    }
+                },
+                required: ["type", "box"],
             },
-            required: ["top", "left", "width", "height"],
-          },
-          style: {
-             type: Type.OBJECT,
-             properties: {
-                 fontSize: { type: Type.STRING, enum: ["small", "medium", "large", "title"] },
-                 fontWeight: { type: Type.STRING, enum: ["normal", "bold"] },
-                 color: { type: Type.STRING },
-                 alignment: { type: Type.STRING, enum: ["left", "center", "right"] }
-             }
-          }
         },
-        required: ["type", "box"],
-      },
     },
-  },
-  required: ["elements", "backgroundColor"],
+    required: ["elements", "backgroundColor"],
 };
 
 // --- NEW FUNCTION: STEP 1 - LAYOUT ANALYSIS ---
 export const analyzeLayout = async (base64Image: string): Promise<SlideAnalysisResult> => {
-  const cleanBase64 = base64Image.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, "");
+    const cleanBase64 = base64Image.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, "");
 
-  const prompt = `
+    const prompt = `
     Analyze the layout of this PPT slide using STRICT GEOMETRY.
     
     1. **Background**: Identify the dominant solid background color.
@@ -680,22 +683,22 @@ export const analyzeLayout = async (base64Image: string): Promise<SlideAnalysisR
     - Return coordinates in 0-100% relative to the image size.
   `;
 
-  let jsonText = "";
-  try {
-    if (currentSettings.currentProvider === 'gemini') {
-        const ai = getGeminiClient();
-        const analysisResponse = await callGeminiWithRetry<GenerateContentResponse>(() => ai.models.generateContent({
-          model: currentSettings.gemini.recognitionModel,
-          contents: { parts: [{ inlineData: { mimeType: 'image/png', data: cleanBase64 } }, { text: prompt + " Strictly follow the JSON schema." }] },
-          config: { 
-              responseMimeType: "application/json",
-              responseSchema: processImageSchema
-          }
-        }));
-        jsonText = analysisResponse.text || "";
-    } else {
-        // OpenAI Prompt - Explicit JSON Example instead of Schema Object
-        const openAIPrompt = `${prompt}
+    let jsonText = "";
+    try {
+        if (currentSettings.currentProvider === 'gemini') {
+            const ai = getGeminiClient();
+            const analysisResponse = await callGeminiWithRetry<GenerateContentResponse>(() => ai.models.generateContent({
+                model: currentSettings.gemini.recognitionModel,
+                contents: { parts: [{ inlineData: { mimeType: 'image/png', data: cleanBase64 } }, { text: prompt + " Strictly follow the JSON schema." }] },
+                config: {
+                    responseMimeType: "application/json",
+                    responseSchema: processImageSchema
+                }
+            }));
+            jsonText = analysisResponse.text || "";
+        } else {
+            // OpenAI Prompt - Explicit JSON Example instead of Schema Object
+            const openAIPrompt = `${prompt}
         
         Strictly output VALID JSON with this structure (no markdown code blocks):
         {
@@ -715,27 +718,27 @@ export const analyzeLayout = async (base64Image: string): Promise<SlideAnalysisR
             }
           ]
         }`;
-        
-        jsonText = await callOpenAIChat("JSON Generator", openAIPrompt, cleanBase64, true);
+
+            jsonText = await callOpenAIChat("JSON Generator", openAIPrompt, cleanBase64, true);
+        }
+
+        const cleanedJson = cleanJsonString(jsonText);
+        const analysisData = tryParseJSON(cleanedJson);
+        const rawElements = findElementsArray(analysisData);
+        const processedElements = rawElements.map(normalizeElement);
+
+        return {
+            backgroundColor: analysisData.backgroundColor || '#ffffff',
+            elements: processedElements,
+            cleanedImage: null, // No inpainting yet
+            rawResponse: jsonText
+        };
+
+    } catch (error: any) {
+        console.error("Layout Analysis Failed:", error);
+        error.rawResponse = jsonText;
+        throw error;
     }
-
-    const cleanedJson = cleanJsonString(jsonText);
-    const analysisData = tryParseJSON(cleanedJson);
-    const rawElements = findElementsArray(analysisData);
-    const processedElements = rawElements.map(normalizeElement);
-
-    return {
-        backgroundColor: analysisData.backgroundColor || '#ffffff',
-        elements: processedElements,
-        cleanedImage: null, // No inpainting yet
-        rawResponse: jsonText
-    };
-
-  } catch (error: any) {
-    console.error("Layout Analysis Failed:", error);
-    error.rawResponse = jsonText;
-    throw error;
-  }
 };
 
 // --- NEW FUNCTION: STEP 3 - FINAL PROCESSING ---
@@ -745,10 +748,10 @@ export const processConfirmedLayout = async (base64Image: string, confirmedEleme
 
     // 2. Background Generation using the confirmed boxes as mask guidance
     const cleanBase64 = base64Image.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, "");
-    
+
     try {
         const cleanedImageBase64 = await removeTextFromImage(cleanBase64, detectedTextElements);
-        
+
         // Critical Fix: If cleanedImageBase64 is null (failed), fallback to original base64Image
         // This prevents the "background gone" issue.
         const finalImage = cleanedImageBase64 ? `data:image/png;base64,${cleanedImageBase64}` : base64Image;
@@ -769,7 +772,7 @@ export const processConfirmedLayout = async (base64Image: string, confirmedEleme
         return {
             backgroundColor: backgroundColor,
             elements: confirmedElements,
-            cleanedImage: base64Image, 
+            cleanedImage: base64Image,
             rawResponse: "Background Gen Error (Fallback to Original)"
         };
     }
@@ -777,8 +780,8 @@ export const processConfirmedLayout = async (base64Image: string, confirmedEleme
 
 // --- LEGACY/WRAPPER FUNCTION (For backward compatibility if needed) ---
 export const processImage = async (base64Image: string): Promise<SlideAnalysisResult> => {
-  const analysis = await analyzeLayout(base64Image);
-  return await processConfirmedLayout(base64Image, analysis.elements, analysis.backgroundColor);
+    const analysis = await analyzeLayout(base64Image);
+    return await processConfirmedLayout(base64Image, analysis.elements, analysis.backgroundColor);
 };
 
 export const analyzeVisualToVector = async (base64Image: string): Promise<{
@@ -844,7 +847,7 @@ export const analyzeVisualToVector = async (base64Image: string): Promise<{
         }
 
         const data = tryParseJSON(cleanJsonString(jsonText));
-        
+
         return {
             isVector: data.isVector === true,
             shapeType: data.shapeType || 'rect',
